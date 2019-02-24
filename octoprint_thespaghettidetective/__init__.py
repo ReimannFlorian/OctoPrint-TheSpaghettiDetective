@@ -99,9 +99,11 @@ class TheSpaghettiDetectivePlugin(
     ##~~Startup Plugin
 
     def on_after_startup(self):
+        _logger.info('entered on_after_startup')
         main_thread = threading.Thread(target=self.main_loop)
         main_thread.daemon = True
         main_thread.start()
+        _logger.info('after thread start')
 
 
     ## Private methods
@@ -114,6 +116,7 @@ class TheSpaghettiDetectivePlugin(
 
     @backoff.on_exception(backoff.expo, Exception, max_value=240)
     def main_loop(self):
+        _logger.info('entered main_loop')
         last_post_pic = 0
         last_post_status = 0
         while True:
@@ -121,6 +124,7 @@ class TheSpaghettiDetectivePlugin(
                 time.sleep(1)
                 next
 
+            _logger.info('entered main_loop')
             if last_post_pic < time.time() - POST_PIC_INTERVAL_SECONDS:
                 last_post_pic = time.time()
                 self.post_jpg()
@@ -134,13 +138,17 @@ class TheSpaghettiDetectivePlugin(
             time.sleep(1)
 
     def post_jpg(self):
+        _logger.info('entered post_jpg')
         if not self.is_configured():
             return
 
         endpoint = self.canonical_endpoint_prefix() + '/api/octo/pic/'
 
+        _logger.info('before capture jpg')
         files = {'pic': capture_jpeg(self._settings.global_get(["webcam"]))}
+        _logger.info('after capture jpg')
         resp = requests.post( endpoint, files=files, headers=self.auth_headers() )
+        _logger.info('resp: ' + str(resp))
         resp.raise_for_status()
         self.process_response(resp)
 
